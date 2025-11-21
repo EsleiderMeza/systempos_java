@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${titulo} + ' - SystemPOS'">Alertas - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h1 th:text="${titulo}">Alertas de Inventario</h1>
+        </header>
+
+        <div class="card">
+            <a href="/inventario" class="button" style="margin-bottom:16px;">← Volver al Inventario</a>
+
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Stock</th>
+                    <th>Stock Mínimo</th>
+                    <th>Precio Venta</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${productos == null or productos.isEmpty()}">
+                    <td colspan="5" style="text-align:center">No hay productos en esta categoría</td>
+                </tr>
+                <tr th:each="p : ${productos}">
+                    <td th:text="${p.codigo}"></td>
+                    <td th:text="${p.nombre}"></td>
+                    <td th:text="${p.stock}" style="color:#dc3545; font-weight:bold;"></td>
+                    <td th:text="${p.stockMinimo}"></td>
+                    <td th:text="'$' + ${p.precioVenta}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

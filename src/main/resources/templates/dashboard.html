@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h1>Bienvenido, <span th:text="${usuario}">Usuario</span> 👋</h1>
+            <p class="topbar-date" id="fecha-actual"></p>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="stat-card stat-ventas-hoy">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Ventas del Día</div>
+                <div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(totalVentasHoy, 1, 2)}">$0.00</div>
+                <div class="stat-change">↗ Actualizado en tiempo real</div>
+            </div>
+
+            <div class="stat-card stat-productos-total">
+                <div class="stat-icon">📦</div>
+                <div class="stat-label">Total Productos</div>
+                <div class="stat-value" th:text="${totalProductos}">0</div>
+                <div class="stat-change">En inventario activo</div>
+            </div>
+
+            <div class="stat-card stat-clientes-total">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Clientes</div>
+                <div class="stat-value" th:text="${totalClientes}">0</div>
+                <div class="stat-change">Registrados en el sistema</div>
+            </div>
+
+            <div class="stat-card stat-proveedores-total">
+                <div class="stat-icon">🚚</div>
+                <div class="stat-label">Proveedores</div>
+                <div class="stat-value" th:text="${totalProveedores}">0</div>
+                <div class="stat-change">Activos</div>
+            </div>
+        </div>
+
+        <h3 class="quick-actions-title">⚡ Acciones Rápidas</h3>
+        <div class="quick-actions">
+            <a href="/ventas" class="action-btn">
+                <div class="action-icon">🛒</div>
+                <div class="action-btn-label">Nueva Venta</div>
+                <div class="action-btn-info">Registrar venta</div>
+            </a>
+
+            <a href="/productos" class="action-btn">
+                <div class="action-icon">📦</div>
+                <div class="action-btn-label">Agregar Producto</div>
+                <div class="action-btn-info">Nuevo inventario</div>
+            </a>
+
+            <a href="/clientes" class="action-btn">
+                <div class="action-icon">👤</div>
+                <div class="action-btn-label">Nuevo Cliente</div>
+                <div class="action-btn-info">Registrar cliente</div>
+            </a>
+
+            <a href="/reportes" class="action-btn">
+                <div class="action-icon">📊</div>
+                <div class="action-btn-label">Ver Reportes</div>
+                <div class="action-btn-info">Estadísticas</div>
+            </a>
+
+            <a href="/inventario" class="action-btn">
+                <div class="action-icon">📋</div>
+                <div class="action-btn-label">Inventario</div>
+                <div class="action-btn-info">Control de stock</div>
+            </a>
+
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')" class="action-btn">
+                <div class="action-icon">⚙️</div>
+                <div class="action-btn-label">Configuración</div>
+                <div class="action-btn-info">Sistema</div>
+            </a>
+        </div>
+
+        <div class="charts-layout">
+            <div class="chart-container">
+                <h3 class="chart-title">📈 Resumen de Ventas (Últimos 7 días)</h3>
+                <canvas id="chartVentasSemana" height="80"></canvas>
+            </div>
+
+            <div class="recent-list">
+                <h3 class="chart-title">⚠️ Alertas de Inventario</h3>
+                <div class="inventory-alerts-scroll">
+                    <div class="recent-item alert-item-low-stock">
+                        <div>
+                            <div class="alert-text-low-stock">Stock Bajo</div>
+                            <div class="alert-info-low-stock">3 productos necesitan reabastecimiento</div>
+                        </div>
+                        <a href="/inventario/stock-bajo" class="alert-link-low-stock">Ver →</a>
+                    </div>
+
+                    <div class="recent-item alert-item-ok">
+                        <div>
+                            <div class="alert-text-ok">Inventario OK</div>
+                            <div class="alert-info-ok">El resto de productos tienen stock suficiente</div>
+                        </div>
+                        <span class="alert-icon-ok">✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-layout">
+            <div class="recent-list">
+                <div class="recent-header">
+                    <h3>🧾 Últimas Ventas</h3>
+                    <a href="/ventas" class="recent-link">Ver todas →</a>
+                </div>
+
+                <div th:if="${ventasHoy.isEmpty()}" class="empty-list-message">
+                    <div class="empty-list-icon">📭</div>
+                    <p>No hay ventas registradas hoy</p>
+                    <a href="/ventas" class="button">Registrar Primera Venta</a>
+                </div>
+
+                <div th:each="v, iterStat : ${ventasHoy}" th:if="${iterStat.index < 5}" class="recent-item">
+                    <div class="sale-details-left">
+                        <div class="sale-id">Venta #<span th:text="${v.id}">001</span></div>
+                        <div class="sale-time" th:text="${#temporals.format(v.createdAt, 'HH:mm')}">10:00</div>
+                    </div>
+                    <div class="sale-details-right">
+                        <div class="sale-total" th:text="'$' + ${#numbers.formatDecimal(v.total, 1, 2)}">$0.00</div>
+                        <div class="sale-payment-method" th:text="${v.paymentMethod}">Efectivo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-list">
+                <div class="recent-header">
+                    <h3>🏆 Top Productos</h3>
+                    <a href="/reportes" class="recent-link">Ver reporte →</a>
+                </div>
+
+                <div class="recent-item">
+                    <div class="product-details-left">
+                        <div class="product-name">Laptop Lenovo</div>
+                        <div class="product-category">Categoría: Tecnología</div>
+                    </div>
+                    <div class="product-details-right">
+                        <div class="product-sales-count">15 ventas</div>
+                        <div class="product-sales-period">Este mes</div>
+                    </div>
+                </div>
+
+                <div class="recent-item">
+                    <div class="product-details-left">
+                        <div class="product-name">Samsung Galaxy</div>
+                        <div class="product-category">Categoría: Celulares</div>
+                    </div>
+                    <div class="product-details-right">
+                        <div class="product-sales-count">8 ventas</div>
+                        <div class="product-sales-period">Este mes</div>
+                    </div>
+                </div>
+
+                <div class="report-link-message">
+                    <p>Ver más estadísticas en Reportes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-footer">
+            <p class="dashboard-tip">
+                💡 <strong>Tip del día:</strong> Revisa regularmente el inventario para evitar quedarte sin stock de productos populares
+            </p>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/ventas.css}">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <div class="header-sales">
+            <div class="header-content">
+                <div>
+                    <h1 class="header-title">
+                        🛒 Punto de Venta
+                    </h1>
+                    <p class="header-subtitle">
+                        Sistema de ventas rápido y eficiente
+                    </p>
+                </div>
+                <div class="header-time-container">
+                    <div class="header-date">
+                        📅 <span id="fechaActual"></span>
+                    </div>
+                    <div class="header-time">
+                        🕐 <span id="horaActual"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${mensaje}" class="alert alert-success">
+            <span>✓</span>
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <span>⚠</span>
+            <span th:text="${error}"></span>
+        </div>
+
+        <div class="ventas-container">
+            <div class="productos-section">
+                <div class="search-bar">
+                    <input type="text"
+                           id="searchProducto"
+                           class="search-input"
+                           placeholder="🔍 Buscar productos por nombre o código..."
+                           onkeyup="filtrarProductos()">
+                </div>
+
+                <div class="productos-grid" id="productosGrid">
+                    <div th:each="p : ${productos}"
+                         class="producto-card"
+                         th:classappend="${p.stock == 0} ? 'sin-stock' : ''"
+                         th:onclick="${p.stock > 0} ? 'agregarProducto(' + ${p.id} + ')' : ''"
+                         th:data-nombre="${p.nombre}"
+                         th:data-codigo="${p.codigo}">
+
+                        <div class="producto-icon">📦</div>
+
+                        <div class="producto-nombre" th:text="${p.nombre}">Producto</div>
+
+                        <div class="producto-precio" th:text="'$' + ${#numbers.formatDecimal(p.precioVenta, 1, 2)}">$0.00</div>
+
+                        <div class="producto-stock">
+                            <span>Stock:</span>
+                            <span class="stock-badge"
+                                  th:classappend="${p.stock == 0} ? 'stock-critico' : (${p.stock <= p.stockMinimo} ? 'stock-bajo' : 'stock-ok')"
+                                  th:text="${p.stock}">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carrito-section">
+                <div class="carrito-header">
+                    <h2>🧾 Ticket de Venta</h2>
+                </div>
+
+                <div class="carrito-body" id="carritoBody">
+                    <div class="carrito-vacio">
+                        <div class="carrito-vacio-icon">🛒</div>
+                        <p>Selecciona productos para comenzar</p>
+                    </div>
+                </div>
+
+                <div class="carrito-footer">
+                    <form method="post" th:action="@{/ventas/registrar}" id="formVenta">
+                        <div class="carrito-total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotalGeneral">$0.00</span>
+                        </div>
+                        <div class="carrito-total-row">
+                            <span>Impuesto (19%):</span>
+                            <span id="impuestoGeneral">$0.00</span>
+                        </div>
+                        <div class="carrito-total-row total">
+                            <span>TOTAL:</span>
+                            <span id="totalGeneral">$0.00</span>
+                        </div>
+
+                        <div class="pago-section">
+                            <div class="form-group">
+                                <label>💳 Método de Pago:</label>
+                                <select name="metodoPago" class="form-select" required>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="tarjeta">Tarjeta</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🧾 Tipo de Comprobante:</label>
+                                <select name="tipoComprobante" class="form-select" required>
+                                    <option value="Ticket">Ticket</option>
+                                    <option value="Factura">Factura</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-finalizar" id="btnFinalizar" disabled>
+                            Finalizar Venta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="ventas-historial">
+            <div class="historial-header">
+                <h3>📋 Ventas de Hoy</h3>
+                <button class="btn-toggle-vista" onclick="toggleVista()" id="btnToggleVista">
+                    📊 Ver Tabla
+                </button>
+            </div>
+
+            <div id="ventasGrid" class="ventas-grid">
+                <div th:if="${ventas.isEmpty()}" class="empty-historial">
+                    <div class="empty-historial-icon">📭</div>
+                    <p>No hay ventas registradas hoy</p>
+                </div>
+
+                <div th:each="v : ${ventas}" class="venta-card">
+                    <div class="venta-header">
+                <span class="venta-id-badge">
+                    Venta #<span th:text="${v.id}">001</span>
+                </span>
+                        <div class="venta-total-container">
+                            <div class="venta-total-amount"
+                                 th:text="'$' + ${#numbers.formatDecimal(v.total, 1, 2)}">$0.00</div>
+                            <div class="venta-time" th:text="${#temporals.format(v.createdAt, 'HH:mm')}">10:00</div>
+                        </div>
+                    </div>
+
+                    <div class="venta-details">
+                        <div class="venta-details-grid">
+                            <div class="venta-detail-row">
+                                <span>📅</span>
+                                <span th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy')}">01/01/2025</span>
+                            </div>
+                            <div class="venta-detail-row">
+                                <span>💳</span>
+                                <span th:text="${v.paymentMethod}" style="text-transform:capitalize;">Efectivo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a th:href="@{/ventas/{id}(id=${v.id})}"
+                       class="venta-detail-link">
+                        👁️ Ver Detalle
+                    </a>
+                </div>
+            </div>
+
+            <div id="ventasTabla" style="display:none; margin-top:20px;">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Método Pago</th>
+                            <th>Comprobante</th>
+                            <th>Vendedor</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${ventas.isEmpty()}">
+                            <td colspan="7" class="table-empty-message">
+                                <div class="table-empty-icon">📭</div>
+                                <p>No hay ventas registradas hoy</p>
+                            </td>
+                        </tr>
+                        <tr th:each="v : ${ventas}">
+                            <td th:text="${v.id}"></td>
+                            <td th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="'$' + ${#numbers.formatDecimal(v.total, 1, 2)}" style="color:#28a745; font-weight:bold;"></td>
+                            <td th:text="${v.paymentMethod}"></td>
+                            <td th:text="${v.comprobanteType}"></td>
+                            <td th:text="${v.usuario != null ? v.usuario.nombre : 'N/A'}"></td>
+                            <td>
+                                <a th:href="@{/ventas/{id}(id=${v.id})}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    // Actualizar fecha y hora en tiempo real
+function actualizarFechaHora() {
+    const ahora = new Date();
+    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('fechaActual').textContent = ahora.toLocaleDateString('es-ES', opciones);
+    document.getElementById('horaActual').textContent = ahora.toLocaleTimeString('es-ES');
+}
+actualizarFechaHora();
+setInterval(actualizarFechaHora, 1000);
+    const productos = /*[[${productos}]]*/ [];
+    let carrito = [];
+
+    function agregarProducto(id) {
+        const producto = productos.find(p => p.id === id);
+        if (!producto || producto.stock === 0) return;
+
+        const existe = carrito.find(item => item.id === id);
+        if (existe) {
+            if (existe.cantidad < producto.stock) {
+                existe.cantidad++;
+            } else {
+                alert('No hay suficiente stock disponible');
+                return;
+            }
+        } else {
+            carrito.push({
+                id: producto.id,
+                nombre: producto.nombre,
+                precio: producto.precioVenta,
+                cantidad: 1,
+                stockDisponible: producto.stock
+            });
+        }
+
+        actualizarCarrito();
+    }
+
+    function eliminarProducto(id) {
+        carrito = carrito.filter(item => item.id !== id);
+        actualizarCarrito();
+    }
+
+    function cambiarCantidad(id, delta) {
+        const item = carrito.find(i => i.id === id);
+        if (!item) return;
+
+        const nuevaCantidad = item.cantidad + delta;
+        if (nuevaCantidad <= 0) {
+            eliminarProducto(id);
+            return;
+        }
+        if (nuevaCantidad > item.stockDisponible) {
+            alert('Stock insuficiente');
+            return;
+        }
+
+        item.cantidad = nuevaCantidad;
+        actualizarCarrito();
+    }
+
+    function actualizarCarrito() {
+        const tbody = document.getElementById('carritoBody');
+        const form = document.getElementById('formVenta');
+
+        // Limpiar inputs anteriores
+        form.querySelectorAll('input[name="productosIds"], input[name="cantidades"]').forEach(el => el.remove());
+
+        if (carrito.length === 0) {
+            tbody.innerHTML = `
+                <div class="carrito-vacio">
+                    <div class="carrito-vacio-icon">🛒</div>
+                    <p>Selecciona productos para comenzar</p>
+                </div>
+            `;
+            document.getElementById('btnFinalizar').disabled = true;
+        } else {
+            tbody.innerHTML = carrito.map(item => {
+                const subtotal = item.precio * item.cantidad;
+
+                // Agregar inputs ocultos al formulario
+                const inputId = document.createElement('input');
+                inputId.type = 'hidden';
+                inputId.name = 'productosIds';
+                inputId.value = item.id;
+                form.appendChild(inputId);
+
+                const inputCant = document.createElement('input');
+                inputCant.type = 'hidden';
+                inputCant.name = 'cantidades';
+                inputCant.value = item.cantidad;
+                form.appendChild(inputCant);
+
+                return `
+                    <div class="carrito-item">
+                        <div class="carrito-item-info">
+                            <div class="carrito-item-nombre">${item.nombre}</div>
+                            <div class="carrito-item-precio">$${item.precio.toFixed(2)} × ${item.cantidad}</div>
+                        </div>
+                        <div class="carrito-item-controls">
+                            <div class="qty-control">
+                                <button type="button" class="qty-btn" onclick="cambiarCantidad(${item.id}, -1)">−</button>
+                                <input type="text" class="qty-input" value="${item.cantidad}" readonly>
+                                <button type="button" class="qty-btn" onclick="cambiarCantidad(${item.id}, 1)">+</button>
+                            </div>
+                            <button type="button" class="delete-btn" onclick="eliminarProducto(${item.id})">×</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('btnFinalizar').disabled = false;
+        }
+
+        // Calcular totales
+        const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        const impuesto = subtotal * 0.19;
+        const total = subtotal + impuesto;
+
+        document.getElementById('subtotalGeneral').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('impuestoGeneral').textContent = '$' + impuesto.toFixed(2);
+        document.getElementById('totalGeneral').textContent = '$' + total.toFixed(2);
+    }
+
+    function filtrarProductos() {
+        const input = document.getElementById('searchProducto').value.toUpperCase();
+        const cards = document.querySelectorAll('.producto-card');
+
+        cards.forEach(card => {
+            const nombre = card.dataset.nombre.toUpperCase();
+            const codigo = card.dataset.codigo.toUpperCase();
+
+            if (nombre.includes(input) || codigo.includes(input)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleVista() {
+    const grid = document.getElementById('ventasGrid');
+    const tabla = document.getElementById('ventasTabla');
+    const boton = document.getElementById('btnToggleVista');
+
+    if (grid.style.display === 'none') {
+        // Cambiar a vista de cards
+        grid.style.display = 'grid';
+        tabla.style.display = 'none';
+        boton.innerHTML = '📊 Ver Tabla';
+        boton.style.background = '#667eea';
+    } else {
+        // Cambiar a vista de tabla
+        grid.style.display = 'none';
+        tabla.style.display = 'block';
+        boton.innerHTML = '🃏 Ver Cards';
+        boton.style.background = '#28a745';
+    }
+}
+</script>
+</body>
+</html>

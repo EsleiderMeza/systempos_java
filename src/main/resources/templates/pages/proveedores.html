@@ -1,0 +1,157 @@
+<!-- Página proveedores -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Proveedores - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>🚚 Gestión de Proveedores</h1>
+        </header>
+
+        <!-- Mensajes -->
+        <div th:if="${mensaje}" class="alert" style="background:#e6ffed">
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert" style="background:#ffebee; color:#c62828">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Formulario de Proveedor -->
+        <div class="card">
+            <h3 th:text="${editando != null} ? 'Editar Proveedor' : 'Nuevo Proveedor'">Nuevo Proveedor</h3>
+            <form method="post"
+                  th:action="${editando != null} ? @{/proveedores/actualizar} : @{/proveedores/guardar}"
+                  th:object="${proveedor}">
+
+                <input type="hidden" th:field="*{id}" th:if="${editando != null}">
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+                    <div class="form-row">
+                        <label>Nombre de la Empresa:</label>
+                        <input type="text" th:field="*{nombre}" placeholder="Ej: Distribuidora ABC" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label>RUC/NIT:</label>
+                        <input type="text" th:field="*{documento}" placeholder="Ej: 20123456789" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Teléfono:</label>
+                        <input type="text" th:field="*{telefono}" placeholder="Ej: 01-2345678" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Email:</label>
+                        <input type="email" th:field="*{email}" placeholder="contacto@proveedor.com">
+                    </div>
+
+                    <div class="form-row" style="grid-column: 1 / -1;">
+                        <label>Dirección:</label>
+                        <input type="text" th:field="*{direccion}" placeholder="Ej: Av. Industrial 123" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button type="submit" class="button">
+                        <span th:text="${editando != null} ? 'Actualizar' : 'Guardar'">Guardar</span>
+                    </button>
+                    <a th:if="${editando != null}" href="/proveedores" class="button"
+                       style="background:#6c757d; text-decoration:none;">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de Proveedores -->
+        <div class="card">
+            <h3>Lista de Proveedores</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Empresa</th>
+                    <th>RUC/NIT</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Dirección</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${proveedores == null or proveedores.isEmpty()}">
+                    <td colspan="8" style="text-align:center">No hay proveedores registrados</td>
+                </tr>
+                <tr th:each="p : ${proveedores}">
+                    <td th:text="${p.id}"></td>
+                    <td th:text="${p.nombre}"></td>
+                    <td th:text="${p.documento}"></td>
+                    <td th:text="${p.telefono}"></td>
+                    <td th:text="${p.email}"></td>
+                    <td th:text="${p.direccion}" class="small"></td>
+                    <td th:text="${p.creadoEn != null ? #temporals.format(p.creadoEn, 'dd/MM/yyyy') : 'N/A'}"></td>
+                    <td>
+                        <a th:href="@{/proveedores/editar/{id}(id=${p.id})}"
+                           class="button" style="font-size:12px; padding:6px 10px;">
+                            ✏️ Editar
+                        </a>
+                        <a th:href="@{/proveedores/eliminar/{id}(id=${p.id})}"
+                           class="button"
+                           style="background:#dc3545; font-size:12px; padding:6px 10px;"
+                           onclick="return confirm('¿Está seguro de eliminar este proveedor?')">
+                            🗑️ Eliminar
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Estadísticas -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-top:16px;">
+            <div class="card" style="text-align:center;">
+                <h4>Total Proveedores</h4>
+                <h2 th:text="${proveedores != null ? proveedores.size() : 0}">0</h2>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Proveedores Activos</h4>
+                <h2 th:text="${proveedores != null ? proveedores.size() : 0}" style="color:#28a745;">0</h2>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Productos Asociados</h4>
+                <h2>0</h2>
+                <p class="small">Próximamente</p>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

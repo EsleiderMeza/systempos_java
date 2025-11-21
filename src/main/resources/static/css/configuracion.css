@@ -1,0 +1,315 @@
+/*   principal     */
+.tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+}
+.tab-button {
+    padding: 12px 24px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+.tab-button.active {
+    background: #007bff;
+    color: #fff;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+/*----------------------------------------------------------------------*/
+
+
+
+/* Estadísticas de usuarios */
+
+.stats-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap:16px;
+    margin-bottom:24px;
+}
+.stats-card {
+    background: #007bff;
+    color:#fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 24px;
+    margin-bottom: 18px;
+}
+.stat-card--primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card--secondary {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card--warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-card--info {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+.stats-card h4 {
+    margin:0 0 8px 0;
+    opacity:0.9;"
+}
+
+.stats-card h2 {
+    margin:0;
+    font-size:32px;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*     Mensajes   */
+.alert-message {
+    background:#e6ffed;
+
+}
+
+.alert-error {
+    background:#ffebee;
+    color:#c62828;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*    Token CSRF / formulario nuevo usuario    */
+.user-new-form {
+    display:grid;
+    grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.user-new-buton {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+.user-new-buton a {
+    background:#6c757d;
+    text-decoration:none;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*    Tabla de usuarios    */
+.componente-tu {
+    background:#007bff;
+    color:#fff;
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:10px;
+    margin-left:4px;
+}
+.componente-admin {
+    background:#dc3545;
+    color:#fff;
+    padding:4px 8px;
+    border-radius:4px;
+    font-size:12px;
+}
+.componente-vendedor {
+    background:#28a745;
+    color:#fff;
+    padding:4px 8px;
+    border-radius:4px;
+    font-size:12px;
+}
+.componente-super {
+    background:#ffc107;
+    color:#000;
+    padding:4px 8px;
+    border-radius:4px;
+    font-size:12px;
+}
+.btn-estado {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    color: #fff;
+    transition: all 0.3s;
+}
+
+.btn-estado--activo {
+    background: #28a745;
+}
+
+.btn-estado--inactivo {
+    background: #dc3545;
+}
+
+.btn-estado:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.edit-button {
+    font-size:11px;
+    padding:6px 10px;
+    margin: 2px;
+}
+
+.buton-edit a{
+    text-decoration:none;
+}
+
+.buton-delete{
+    background:#dc3545;
+    font-size:11px;
+    padding:6px 10px;
+}
+/*----------------------------------------------------------------------*/
+
+/*    TAB: Apariencia del Sistema    */
+.tab-content p {
+    color:#666;
+    margin-bottom:20px;
+}
+
+.button-restaurar{
+    background:#6c757d;
+    margin-left:8px;
+}
+/*----------------------------------------------------------------------*/
+
+/*    TAB: Seguridad    */
+.config-importante {
+    background:#fff3cd;
+    padding:16px;
+    border-radius:8px;
+    margin-bottom:20px;
+    border-left:4px solid #ff9800;
+}
+
+.config-importante h4 {
+    margin:0 0 8px 0;
+}
+.config-importante p {
+    margin:0;
+    font-size:14px;
+}
+.btn-guardar-config {
+    background:#28a745;
+}
+
+.card-respaldo p {
+    color:#666;
+    margin-bottom:16px;
+}
+.button-respaldo {
+    background:#28a745;
+}
+
+.button-respaldo-restaurar {
+     background:#17a2b8;
+     margin-left:8px;
+}
+
+.ulti-respaldo {
+    margin-top:20px;
+    padding:12px;
+    background:#f8f9fa;
+    border-radius:8px;
+}
+.ulti-respaldo p {
+    margin:0;
+    font-size:13px;
+    color:#666;
+}
+
+.recomendaciones {
+    margin-top:16px;
+    padding:16px;
+    background:#e7f3ff;
+    border-radius:8px;
+    border-left:4px solid #007bff;
+}
+.recomendaciones p {
+    margin:0 0 8px 0;
+    color:#0056b3;
+}
+
+.recomendaciones ul {
+    margin:0;
+    padding-left:20px;
+    font-size:13px;
+    color:#0056b3;
+}
+/*----------------------------------------------------------------------*/
+
+/*   Modal para restaurar respaldo     */
+
+.modal {
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+}
+
+.modal-restaura-db {
+    background:#fff;
+    padding:32px;
+    border-radius:16px;
+    width:500px;
+    max-width:90%;
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+}
+
+.modal-restaura-db h3 {
+    margin:0 0 24px 0;
+    color:#333;
+}
+
+.modal-advertencia {
+    background:#fff3cd;
+    padding:16px;
+    border-radius:8px;
+    margin-bottom:20px;
+    border-left:4px solid #ff9800;
+}
+
+..modal-advertencia p {
+    margin:0;
+    font-size:14px;
+    color:#856404;
+}
+
+.form-row input {
+    padding:5px;
+    margin:auto;
+    border:2px solid #ddd;
+    border-radius:8px; width:100%;
+}
+.restaurar-datos {
+    display:flex;
+    gap:10px;
+    margin-top:24px;
+}
+.btn-restaurar-datos{
+    flex:1;
+    background:#dc3545;
+}
+.btn-restaurar-datos-cancelar {
+    flex:1;
+    background:#6c757d;
+}
+/*----------------------------------------------------------------------*/

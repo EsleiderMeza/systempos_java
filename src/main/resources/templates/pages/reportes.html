@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>📈 Reportes y Estadísticas</h1>
+        </header>
+
+        <!-- Resumen General -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Ventas Hoy</h4>
+                <h2 style="margin:0; font-size:28px;" th:text="'$' + ${#numbers.formatDecimal(resumen.totalVentasHoy, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;" th:text="${resumen.numeroVentasHoy} + ' ventas'">0 ventas</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Ventas del Mes</h4>
+                <h2 style="margin:0; font-size:28px;" th:text="'$' + ${#numbers.formatDecimal(resumen.totalVentasMes, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;" th:text="${resumen.numeroVentasMes} + ' ventas'">0 ventas</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Promedio Venta</h4>
+                <h2 style="margin:0; font-size:28px;" th:text="'$' + ${#numbers.formatDecimal(resumen.promedioVenta, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;">Por transacción</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Total Productos</h4>
+                <h2 style="margin:0; font-size:28px;" th:text="${resumen.totalProductos}">0</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;" th:text="${resumen.productosStockBajo} + ' con stock bajo'">0 con stock bajo</p>
+            </div>
+        </div>
+
+        <!-- Filtro por rango de fechas -->
+        <div class="card" style="margin-bottom:24px;">
+            <h3>🔍 Reporte por Rango de Fechas</h3>
+            <form method="get" action="/reportes/rango" style="display:flex; gap:12px; align-items:end;">
+                <div class="form-row" style="flex:1;">
+                    <label>Fecha Inicio:</label>
+                    <input type="date" name="fechaInicio" required>
+                </div>
+                <div class="form-row" style="flex:1;">
+                    <label>Fecha Fin:</label>
+                    <input type="date" name="fechaFin" required>
+                </div>
+                <button type="submit" class="button">Generar Reporte</button>
+            </form>
+        </div>
+
+        <!-- Gráficos -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+            <!-- Ventas por día del mes -->
+            <div class="card">
+                <h3>📊 Ventas por Día (Mes Actual)</h3>
+                <canvas id="chartVentasDia"></canvas>
+            </div>
+
+            <!-- Ventas por mes del año -->
+            <div class="card">
+                <h3>📅 Ventas por Mes (Año Actual)</h3>
+                <canvas id="chartVentasMes"></canvas>
+            </div>
+
+            <!-- Productos más vendidos -->
+            <div class="card">
+                <h3>🏆 Top 10 Productos Más Vendidos</h3>
+                <canvas id="chartProductosVendidos"></canvas>
+            </div>
+
+            <!-- Métodos de pago -->
+            <div class="card">
+                <h3>💳 Métodos de Pago</h3>
+                <canvas id="chartMetodosPago"></canvas>
+            </div>
+        </div>
+
+        <!-- Productos más rentables -->
+        <div class="card">
+            <h3>💰 Productos que Generan Más Ingresos</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Producto</th>
+                    <th>Ingresos Totales</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${productosMasRentables.isEmpty()}">
+                    <td colspan="3" style="text-align:center">No hay datos disponibles</td>
+                </tr>
+                <tr th:each="producto, iterStat : ${productosMasRentables}">
+                    <td th:text="${iterStat.count}"></td>
+                    <td th:text="${producto.key}"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(producto.value, 1, 2)}" style="color:#28a745; font-weight:bold;"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Ventas recientes del mes -->
+        <div class="card">
+            <h3>📋 Ventas del Mes</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Método Pago</th>
+                    <th>Comprobante</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${ventasMes.isEmpty()}">
+                    <td colspan="5" style="text-align:center">No hay ventas registradas este mes</td>
+                </tr>
+                <tr th:each="v : ${ventasMes}">
+                    <td th:text="${v.id}"></td>
+                    <td th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(v.total, 1, 2)}" style="color:#28a745; font-weight:bold;"></td>
+                    <td th:text="${v.paymentMethod}"></td>
+                    <td th:text="${v.comprobanteType}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    // Datos desde el servidor
+    const ventasPorDia = /*[[${ventasPorDia}]]*/ {};
+    const ventasPorMes = /*[[${ventasPorMes}]]*/ {};
+    const productosMasVendidos = /*[[${productosMasVendidos}]]*/ {};
+    const metodosPago = /*[[${metodosPago}]]*/ {};
+
+    // Gráfico: Ventas por día
+    new Chart(document.getElementById('chartVentasDia'), {
+        type: 'line',
+        data: {
+            labels: Object.keys(ventasPorDia).sort((a, b) => a - b),
+            datasets: [{
+                label: 'Ventas ($)',
+                data: Object.keys(ventasPorDia).sort((a, b) => a - b).map(dia => ventasPorDia[dia]),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Gráfico: Ventas por mes
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    new Chart(document.getElementById('chartVentasMes'), {
+        type: 'bar',
+        data: {
+            labels: meses,
+            datasets: [{
+                label: 'Ventas ($)',
+                data: Object.keys(ventasPorMes).sort((a, b) => a - b).map(mes => ventasPorMes[mes]),
+                backgroundColor: 'rgba(245, 87, 108, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Gráfico: Productos más vendidos
+    new Chart(document.getElementById('chartProductosVendidos'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(productosMasVendidos),
+            datasets: [{
+                label: 'Cantidad Vendida',
+                data: Object.values(productosMasVendidos),
+                backgroundColor: 'rgba(48, 207, 208, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Gráfico: Métodos de pago
+    new Chart(document.getElementById('chartMetodosPago'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(metodosPago),
+            datasets: [{
+                data: Object.values(metodosPago),
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(245, 87, 108, 0.8)',
+                    'rgba(250, 112, 154, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+</body>
+</html>

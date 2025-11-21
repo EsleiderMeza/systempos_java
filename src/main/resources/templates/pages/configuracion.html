@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/configuracion.css}">
+
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>⚙️ Configuración del Sistema</h1>
+        </header>
+
+        <!-- Mensajes -->
+        <div th:if="${mensaje}" class="alert-message alert" >
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert-error alert" >
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Estadísticas de usuarios -->
+        <div class="stats-grid" >
+            <div class="stats-card stat-card--primary" >
+                <h4> Total Usuarios </h4>
+                <h2 th:text="${totalUsuarios}">0</h2>
+            </div>
+
+            <div class="stats-card stat-card--secondary" >
+                <h4>Usuarios Activos</h4>
+                <h2 th:text="${usuariosActivos}">0</h2>
+            </div>
+
+            <div class="stats-card stat-card--warning" >
+                <h4>Administradores</h4>
+                <h2 th:text="${administradores}">0</h2>
+            </div>
+
+            <div class="stats-card stat-card--info" >
+                <h4>Vendedores</h4>
+                <h2 th:text="${vendedores}">0</h2>
+            </div>
+        </div>
+
+        <!-- Tabs de configuración -->
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="cambiarTab('usuarios')">👥 Gestión de Usuarios</button>
+            <button class="tab-button" onclick="cambiarTab('sistema')">🎨 Apariencia del Sistema</button>
+            <button class="tab-button" onclick="cambiarTab('seguridad')">🔐 Seguridad</button>
+        </div>
+
+        <!-- TAB: Gestión de Usuarios -->
+        <div id="tab-usuarios" class="tab-content active">
+            <!-- Formulario de usuario -->
+            <div class="card">
+                <h3 th:text="${editando != null} ? 'Editar Usuario' : 'Nuevo Usuario'">Nuevo Usuario</h3>
+                <form method="post"
+                      th:action="${editando != null} ? @{/configuracion/usuarios/actualizar} : @{/configuracion/usuarios/crear}">
+
+                    <!-- Token CSRF -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <input type="hidden" name="id" th:value="${usuario.id}" th:if="${editando != null}">
+
+                    <div class="user-new-form">
+                        <div class="form-row">
+                            <label>Nombre Completo:</label>
+                            <input type="text" name="nombre" th:value="${usuario.nombre}" placeholder="Ej: Juan Pérez" required>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Email:</label>
+                            <input type="email" name="email" th:value="${usuario.email}" placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <div class="form-row">
+                            <label>Usuario (Login):</label>
+                            <input type="text" name="usuario" th:value="${usuario.usuario}" placeholder="usuario123" required>
+                        </div>
+
+                        <div class="form-row">
+                            <label th:text="${editando != null} ? 'Nueva Contraseña (dejar vacío para no cambiar):' : 'Contraseña:'">Contraseña:</label>
+                            <input type="password"
+                                   th:name="${editando != null} ? 'nuevaClave' : 'clave'"
+                                   th:required="${editando == null}"
+                                   placeholder="••••••••">
+                        </div>
+
+                        <div class="form-row">
+                            <label>Rol:</label>
+                            <select name="rol" th:value="${usuario.rol}" required>
+                                <option value="admin" th:selected="${usuario.rol == 'admin'}">Administrador</option>
+                                <option value="vendedor" th:selected="${usuario.rol == 'vendedor'}">Vendedor</option>
+                                <option value="supervisor" th:selected="${usuario.rol == 'supervisor'}">Supervisor</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Estado:</label>
+                            <select name="estado" th:value="${usuario.estado}">
+                                <option value="1" th:selected="${usuario.estado == 1}">Activo</option>
+                                <option value="0" th:selected="${usuario.estado == 0}">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div  class="user-new-buton">
+                        <button type="submit" class="button">
+                            <span th:text="${editando != null} ? '💾 Actualizar' : '➕ Crear Usuario'">Guardar</span>
+                        </button>
+                        <a th:if="${editando != null}" href="/configuracion" class="button">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de usuarios -->
+            <div class="card">
+                <h3>Lista de Usuarios del Sistema</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td th:text="${u.id}"></td>
+                        <td th:text="${u.nombre}"></td>
+                        <td>
+                            <strong th:text="${u.usuario}"></strong>
+                            <span class="componente-tu" th:if="${u.usuario == usuarioActual}">TÚ</span>
+                        </td>
+                        <td th:text="${u.email}"></td>
+                        <td>
+                            <span class="componente-admin" th:if="${u.rol == 'admin'}">👑 Admin</span>
+                            <span class="componente-vendedor" th:if="${u.rol == 'vendedor'}">🛒 Vendedor</span>
+                            <span class="componente-super" th:if="${u.rol == 'supervisor'}">👁️ Supervisor</span>
+                        </td>
+                        <td>
+                            <form method="post" th:action="@{/configuracion/usuarios/cambiar-estado/{id}(id=${u.id})}" style="display:inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" name="estado" th:value="${u.estado == 1 ? 0 : 1}">
+                                <button type="submit"
+                                        th:classappend="${u.estado == 1} ? 'btn-estado btn-estado--activo' : 'btn-estado btn-estado--inactivo'"
+                                        th:disabled="${u.usuario == usuarioActual}">
+                                    <span th:text="${u.estado == 1} ? '✓ Activo' : '✗ Inactivo'"></span>
+                                </button>
+                            </form>
+                        </td>
+                        <td th:text="${u.creadoEn != null ? #temporals.format(u.creadoEn, 'dd/MM/yyyy') : 'N/A'}"></td>
+                        <td class="buton-edit" >
+                            <a th:href="@{/configuracion/usuarios/editar/{id}(id=${u.id})}"
+                               class="button edit-button" >
+                                ✏️ Editar
+                            </a>
+                            <a th:href="@{/configuracion/usuarios/eliminar/{id}(id=${u.id})}"
+                               class="button buton-delete"
+                               th:if="${u.usuario != usuarioActual}"
+                               onclick="return confirm('¿Está seguro de eliminar este usuario?')">
+                                🗑️ Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: Apariencia del Sistema -->
+        <div id="tab-sistema" class="tab-content">
+            <div class="card">
+                <h3>🎨 Personalización de Apariencia</h3>
+                <p >Personaliza la apariencia del sistema según tus preferencias</p>
+
+                <div class="form-row">
+                    <label>Tema del Sistema:</label>
+                    <select id="theme-selector" onchange="cambiarTema(this.value)">
+                        <option value="light">☀️ Modo Claro</option>
+                        <option value="dark">🌙 Modo Oscuro</option>
+                        <option value="blue">💙 Azul Profesional</option>
+                        <option value="green">💚 Verde Natural</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label>Tamaño de Fuente:</label>
+                    <select id="font-size" onchange="cambiarTamanoFuente(this.value)">
+                        <option value="small">Pequeño</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="large">Grande</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label>Color del Sidebar:</label>
+                    <input type="color" id="sidebar-color" value="#1976d2" onchange="cambiarColorSidebar(this.value)">
+                </div>
+
+                <button onclick="guardarPreferencias()" class="button">💾 Guardar Preferencias</button>
+                <button onclick="restaurarDefecto()" class="button button-restaurar" >🔄 Restaurar Predeterminado</button>
+            </div>
+
+            <div class="card">
+                <h3>🏢 Información del Negocio</h3>
+                <form>
+                    <div class="form-row">
+                        <label>Nombre del Negocio:</label>
+                        <input type="text" placeholder="SystemPOS+">
+                    </div>
+                    <div class="form-row">
+                        <label>Dirección:</label>
+                        <input type="text" placeholder="Calle 123 #45-67">
+                    </div>
+                    <div class="form-row">
+                        <label>Teléfono:</label>
+                        <input type="text" placeholder="(01) 234-5678">
+                    </div>
+                    <button type="submit" class="button">💾 Guardar Información</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB: Seguridad -->
+        <div id="tab-seguridad" class="tab-content">
+            <div class="card">
+                <h3>🔐 Configuración de Seguridad</h3>
+
+                <div class="config-importante" >
+                    <h4 >⚠️ Configuraciones Importantes</h4>
+                    <p >Estas configuraciones afectan la seguridad del sistema</p>
+                </div>
+
+                <form method="post" th:action="@{/configuracion/seguridad/guardar}">
+                    <!-- Token CSRF -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" name="passwordFuerte" value="true" checked>
+                            Requerir contraseña fuerte (mínimo 8 caracteres)
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" name="cerrarSesionAuto" value="true" checked>
+                            Cerrar sesión automáticamente después de 30 minutos de inactividad
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" name="sesionesMultiples" value="true">
+                            Permitir múltiples sesiones simultáneas por usuario
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" name="registrarLogs" value="true" checked>
+                            Registrar actividad de usuarios (logs)
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Intentos de login antes de bloquear cuenta:</label>
+                        <select name="intentosLogin">
+                            <option value="3">3 intentos</option>
+                            <option value="5" selected>5 intentos</option>
+                            <option value="10">10 intentos</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="button btn-guardar-config" >
+                        💾 Guardar Configuración de Seguridad
+                    </button>
+                </form>
+            </div>
+
+            <div class="card card-respaldo">
+                <h3>📊 Respaldo de Datos</h3>
+                <p >Crea copias de seguridad de tu base de datos</p>
+
+                <form method="post" th:action="@{/configuracion/respaldo/crear}" style="display:inline;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="button button-respaldo" >
+                        📥 Crear Respaldo Ahora
+                    </button>
+                </form>
+
+                <button onclick="mostrarModalRestaurar()" class="button button-respaldo-restaurar">
+                    📤 Restaurar desde Respaldo
+                </button>
+
+                <div class="ulti-respaldo" >
+                    <p >
+                        <strong>Último respaldo:</strong> No hay respaldos registrados
+                    </p>
+                    <p style="margin:8px 0 0 0; font-size:12px; color:#999;">
+                        Los respaldos se guardan automáticamente en el servidor
+                    </p>
+                </div>
+
+                <div class="recomendaciones" >
+                    <h4>💡 Recomendaciones</h4>
+                    <ul>
+                        <li>Realiza respaldos al menos una vez por semana</li>
+                        <li>Guarda copias en ubicaciones diferentes</li>
+                        <li>Verifica que los respaldos se puedan restaurar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal para restaurar respaldo -->
+<div class="modal" id="modalRestaurar" >
+    <div class="modal-restaura-db" >
+        <h3 >📤 Restaurar Base de Datos</h3>
+
+        <div class="modal-advertencia" >
+            <p >
+                <strong>⚠️ Advertencia:</strong> Esta acción sobrescribirá todos los datos actuales. Asegúrate de tener un respaldo reciente antes de continuar.
+            </p>
+        </div>
+
+        <form method="post" th:action="@{/configuracion/respaldo/restaurar}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="form-row">
+                <label>Selecciona el archivo de respaldo:</label>
+                <input type="file" name="archivoRespaldo" accept=".sql" required >
+            </div>
+
+            <div class="restaurar-datos" >
+                <button type="submit" class="button btn-restaurar-datos" >
+                    ⚠️ Restaurar Datos
+                </button>
+                <button type="button" onclick="cerrarModalRestaurar()" class="button btn-restaurar-datos-cancelar" >
+                    ✗ Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script th:src="@{/js/configuracion.js}"></script>
+</body>
+
+</html>

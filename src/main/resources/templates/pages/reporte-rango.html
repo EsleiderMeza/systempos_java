@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte por Rango - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h1>📊 Reporte por Rango de Fechas</h1>
+        </header>
+
+        <div class="card">
+            <a href="/reportes" class="button" style="margin-bottom:16px;">← Volver a Reportes</a>
+
+            <h3>
+                Ventas desde <span th:text="${#temporals.format(fechaInicio, 'dd/MM/yyyy')}"></span>
+                hasta <span th:text="${#temporals.format(fechaFin, 'dd/MM/yyyy')}"></span>
+            </h3>
+
+            <div style="background:#e6ffed; padding:16px; border-radius:8px; margin:16px 0;">
+                <h2 style="margin:0; color:#046b18;">
+                    Total: $<span th:text="${#numbers.formatDecimal(total, 1, 2)}">0.00</span>
+                </h2>
+                <p style="margin:8px 0 0 0; color:#046b18;">
+                    <span th:text="${ventas.size()}">0</span> venta(s) registrada(s)
+                </p>
+            </div>
+
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha y Hora</th>
+                    <th>Total</th>
+                    <th>Impuesto</th>
+                    <th>Método Pago</th>
+                    <th>Comprobante</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${ventas.isEmpty()}">
+                    <td colspan="6" style="text-align:center">No hay ventas en este rango de fechas</td>
+                </tr>
+                <tr th:each="v : ${ventas}">
+                    <td th:text="${v.id}"></td>
+                    <td th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(v.total, 1, 2)}" style="color:#28a745; font-weight:bold;"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(v.tax, 1, 2)}"></td>
+                    <td th:text="${v.paymentMethod}"></td>
+                    <td th:text="${v.comprobanteType}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <button onclick="window.print()" class="button" style="margin-top:16px;">🖨️ Imprimir Reporte</button>
+        </div>
+    </main>
+</div>
+</body>
+</html>

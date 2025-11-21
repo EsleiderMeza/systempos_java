@@ -1,0 +1,216 @@
+/* Tu archivo de estilos principal */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f7fa;
+    color: #333;
+}
+
+/* Login */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.login-card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 320px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.login-card input, .login-card button {
+    width: 100%;
+    padding: 0.8rem;
+    margin: 0.5rem 0;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+.login-card button {
+    background: linear-gradient(135deg, #6c63ff, #00c9a7);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* Layout */
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 220px;
+    background: #2c3e50;
+    color: #fff;
+    padding: 1rem;
+}
+.sidebar .logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.sidebar nav a {
+    display: block;
+    color: #fff;
+    padding: 0.7rem;
+    text-decoration: none;
+    border-radius: 8px;
+}
+.sidebar nav a:hover {
+    background: rgba(255,255,255,0.1);
+}
+.logout {
+    background: #e74c3c;
+    text-align: center;
+}
+
+/* Main content */
+.content {
+    flex: 1;
+    padding: 1rem;
+}
+.topbar {
+    background: #fff;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+}
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+.card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+
+
+/* Forms  ventas */
+    body {
+        background: #f7f9fa;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        color: #222;
+    }
+
+    .topbar {
+        background: #007bff;
+        color: #fff;
+        padding: 24px 32px 16px 32px;
+        border-radius: 0 0 16px 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .content {
+        padding: 24px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+        margin-bottom: 18px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+    }
+
+    .table th {
+        background: #f1f3f6;
+        color: #007bff;
+        font-weight: 600;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .button {
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .button:hover {
+        background: #0056b3;
+    }
+
+    .form-row {
+        margin-bottom: 14px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-row label {
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: #007bff;
+    }
+
+    .form-row input,
+    .form-row select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        font-size: 15px;
+    }
+
+    .alert {
+        padding: 12px 18px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 15px;
+        background: #e6ffed;
+        color: #046b18;
+        border: 1px solid #b2f5ea;
+    }
+
+    .alert[style*='background:#e6ffed'] {
+        background: #e6ffed;
+        color: #046b18;
+    }
+
+    .alert[style*='background:#ff7b7b'] {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .small {
+        font-size: 13px;
+        color: #666;
+    }
+
+    @media (max-width: 900px) {
+        .content {
+            padding: 8px;
+        }
+
+        .card {
+            padding: 12px;
+        }
+    }
+

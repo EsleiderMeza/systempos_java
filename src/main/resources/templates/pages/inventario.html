@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>📊 Control de Inventario</h1>
+        </header>
+
+        <!-- Mensajes -->
+        <div th:if="${mensaje}" class="alert" style="background:#e6ffed">
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert" style="background:#ffebee; color:#c62828">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Estadísticas principales -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:24px;">
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Valor Total Inventario</h4>
+                <h2 style="margin:0; font-size:32px;" th:text="'$' + ${#numbers.formatDecimal(valorTotal, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;">Precio de compra</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Valor Potencial Ventas</h4>
+                <h2 style="margin:0; font-size:32px;" th:text="'$' + ${#numbers.formatDecimal(valorPotencial, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;">Precio de venta</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Total Productos</h4>
+                <h2 style="margin:0; font-size:32px;" th:text="${totalProductos}">0</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;">En inventario</p>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color:#fff;">
+                <h4 style="margin:0 0 8px 0; opacity:0.9;">Ganancia Potencial</h4>
+                <h2 style="margin:0; font-size:32px;" th:text="'$' + ${#numbers.formatDecimal(valorPotencial - valorTotal, 1, 2)}">$0.00</h2>
+                <p style="margin:8px 0 0 0; opacity:0.8; font-size:13px;">Utilidad estimada</p>
+            </div>
+        </div>
+
+        <!-- Alertas de inventario -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+            <!-- Stock Bajo -->
+            <div class="card" style="border-left: 4px solid #ff9800;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0;">⚠️ Stock Bajo</h3>
+                    <a href="/inventario/stock-bajo" class="button" style="font-size:12px; padding:6px 12px;">Ver Todos</a>
+                </div>
+                <p style="color:#666; margin:8px 0;">Productos que alcanzaron el stock mínimo</p>
+                <h2 style="color:#ff9800; margin:8px 0;" th:text="${stockBajo.size()}">0</h2>
+
+                <div th:if="${!stockBajo.isEmpty()}" style="margin-top:12px; max-height:200px; overflow-y:auto;">
+                    <div th:each="p : ${#lists.size(stockBajo) > 5 ? stockBajo.subList(0, 5) : stockBajo}"
+                         style="padding:8px; background:#fff3cd; border-radius:4px; margin-bottom:6px; font-size:13px;">
+                        <strong th:text="${p.nombre}"></strong>
+                        <span style="float:right; color:#856404;">
+                                Stock: <strong th:text="${p.stock}"></strong> / Mín: <span th:text="${p.stockMinimo}"></span>
+                            </span>
+                    </div>
+                </div>
+                <p th:if="${stockBajo.isEmpty()}" style="color:#28a745; margin-top:12px;">✓ No hay productos con stock bajo</p>
+            </div>
+
+            <!-- Sin Stock -->
+            <div class="card" style="border-left: 4px solid #dc3545;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0;">🚫 Sin Stock</h3>
+                    <a href="/inventario/sin-stock" class="button" style="font-size:12px; padding:6px 12px; background:#dc3545;">Ver Todos</a>
+                </div>
+                <p style="color:#666; margin:8px 0;">Productos agotados</p>
+                <h2 style="color:#dc3545; margin:8px 0;" th:text="${sinStock.size()}">0</h2>
+
+                <div th:if="${!sinStock.isEmpty()}" style="margin-top:12px; max-height:200px; overflow-y:auto;">
+                    <div th:each="p : ${#lists.size(sinStock) > 5 ? sinStock.subList(0, 5) : sinStock}"
+                         style="padding:8px; background:#f8d7da; border-radius:4px; margin-bottom:6px; font-size:13px; color:#721c24;">
+                        <strong th:text="${p.nombre}"></strong>
+                        <span style="float:right;">❌ Agotado</span>
+                    </div>
+                </div>
+                <p th:if="${sinStock.isEmpty()}" style="color:#28a745; margin-top:12px;">✓ Todos los productos tienen stock</p>
+            </div>
+        </div>
+
+        <!-- Tabla de inventario completo -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0;">📋 Inventario Completo</h3>
+                <input type="text" id="buscarProducto" placeholder="🔍 Buscar producto..."
+                       style="padding:8px 12px; border-radius:6px; border:1px solid #ddd; width:300px;"
+                       onkeyup="filtrarTabla()">
+            </div>
+
+            <table class="table" id="tablaInventario">
+                <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Stock Actual</th>
+                    <th>Stock Mínimo</th>
+                    <th>P. Compra</th>
+                    <th>P. Venta</th>
+                    <th>Valor Inv.</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${inventario == null or inventario.isEmpty()}">
+                    <td colspan="9" style="text-align:center">No hay productos en el inventario</td>
+                </tr>
+                <tr th:each="p : ${inventario}"
+                    th:style="${p.stock == 0} ? 'background:#ffebee;' : (${p.stock <= p.stockMinimo} ? 'background:#fff3cd;' : '')">
+                    <td th:text="${p.codigo}"></td>
+                    <td th:text="${p.nombre}"></td>
+                    <td>
+                        <strong th:text="${p.stock}"
+                                th:style="${p.stock == 0} ? 'color:#dc3545;' : (${p.stock <= p.stockMinimo} ? 'color:#ff9800;' : 'color:#28a745;')">
+                        </strong>
+                    </td>
+                    <td th:text="${p.stockMinimo}"></td>
+                    <td th:text="'$' + ${p.precioCompra}"></td>
+                    <td th:text="'$' + ${p.precioVenta}"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(p.precioCompra * p.stock, 1, 2)}"></td>
+                    <td>
+                                <span th:if="${p.stock == 0}"
+                                      style="background:#dc3545; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px;">
+                                    SIN STOCK
+                                </span>
+                        <span th:if="${p.stock > 0 && p.stock <= p.stockMinimo}"
+                              style="background:#ff9800; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px;">
+                                    BAJO
+                                </span>
+                        <span th:if="${p.stock > p.stockMinimo}"
+                              style="background:#28a745; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px;">
+                                    OK
+                                </span>
+                    </td>
+                    <td>
+                        <button type="button"
+                                th:data-id="${p.id}"
+                                th:data-nombre="${p.nombre}"
+                                th:data-stock="${p.stock}"
+                                onclick="abrirModalStock(this.dataset.id, this.dataset.nombre, this.dataset.stock)"
+                                class="button"
+                                style="font-size:11px; padding:6px 10px; background:#28a745;">
+                            ➕ Agregar
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- Modal para agregar stock -->
+<div id="modalStock" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:32px; border-radius:16px; width:450px; max-width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <h3 id="modalTitulo" style="margin:0 0 24px 0; color:#333;">➕ Agregar Stock</h3>
+        <form method="post" th:action="@{/inventario/agregar-stock}" id="formAgregarStock">
+            <input type="hidden" name="productoId" id="modalProductoId">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="form-row">
+                <label>Producto:</label>
+                <input type="text" id="modalProductoNombre" readonly style="background:#f5f5f5; border:1px solid #ddd; padding:10px; border-radius:8px;">
+            </div>
+
+            <div class="form-row">
+                <label>Stock Actual:</label>
+                <input type="number" id="modalStockActual" readonly style="background:#f5f5f5; border:1px solid #ddd; padding:10px; border-radius:8px; font-weight:bold; color:#007bff;">
+            </div>
+
+            <div class="form-row">
+                <label>Cantidad a Agregar:</label>
+                <input type="number" name="cantidad" id="modalCantidad" min="1" value="1" required autofocus style="border:2px solid #007bff; padding:10px; border-radius:8px; font-size:16px;">
+            </div>
+
+            <div class="form-row">
+                <div style="background:#e7f3ff; padding:12px; border-radius:8px; border-left:4px solid #007bff;">
+                    <strong style="color:#0056b3;">Nuevo Stock:</strong>
+                    <span id="nuevoStockPreview" style="color:#28a745; font-size:20px; font-weight:bold; margin-left:8px;">0</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:24px;">
+                <button type="submit" class="button" style="flex:1; padding:12px; font-size:15px; font-weight:600;">
+                    ✓ Agregar Stock
+                </button>
+                <button type="button" onclick="cerrarModalStock()" class="button" style="flex:1; background:#6c757d; padding:12px; font-size:15px;">
+                    ✗ Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let stockActualGlobal = 0;
+
+    function abrirModalStock(id, nombre, stock) {
+        stockActualGlobal = stock;
+        document.getElementById('modalProductoId').value = id;
+        document.getElementById('modalProductoNombre').value = nombre;
+        document.getElementById('modalStockActual').value = stock;
+        document.getElementById('modalCantidad').value = 1;
+        document.getElementById('nuevoStockPreview').textContent = parseInt(stock) + 1;
+
+        // Mostrar el modal con animación
+        const modal = document.getElementById('modalStock');
+        modal.style.display = 'flex';
+
+        // Hacer focus en el campo de cantidad
+        setTimeout(() => {
+            document.getElementById('modalCantidad').focus();
+            document.getElementById('modalCantidad').select();
+        }, 100);
+    }
+
+    function cerrarModalStock() {
+        const modal = document.getElementById('modalStock');
+        modal.style.display = 'none';
+        document.getElementById('formAgregarStock').reset();
+    }
+
+    // Actualizar preview del nuevo stock en tiempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputCantidad = document.getElementById('modalCantidad');
+        if (inputCantidad) {
+            inputCantidad.addEventListener('input', function() {
+                const cantidad = parseInt(this.value) || 0;
+                const nuevoStock = stockActualGlobal + cantidad;
+                document.getElementById('nuevoStockPreview').textContent = nuevoStock;
+            });
+        }
+    });
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modalStock')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModalStock();
+        }
+    });
+
+    // Cerrar modal con tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModalStock();
+        }
+    });
+
+    function filtrarTabla() {
+        const input = document.getElementById('buscarProducto');
+        const filtro = input.value.toUpperCase();
+        const tabla = document.getElementById('tablaInventario');
+        const filas = tabla.getElementsByTagName('tr');
+
+        for (let i = 1; i < filas.length; i++) {
+            const fila = filas[i];
+            const textoFila = fila.textContent || fila.innerText;
+
+            if (textoFila.toUpperCase().indexOf(filtro) > -1) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        }
+
+        function verDetalleProducto(id) {
+    window.location.href = '/productos/editar/' + id;
+}
+    }
+</script>
+</body>
+</html>

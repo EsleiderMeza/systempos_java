@@ -1,0 +1,84 @@
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background-color: #1976d2;
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 24px 16px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+    z-index: 100;
+}
+
+/* Logo */
+.sidebar .logo {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+/* Navegación */
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sidebar nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.sidebar nav a:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateX(4px);
+}
+
+/* Logout */
+.sidebar nav a.logout {
+    margin-top: auto;
+    background: #e53935;
+    color: #fff;
+    text-align: center;
+}
+
+.sidebar nav a.logout:hover {
+    background: #d32f2f;
+}
+
+/* Ajuste main content */
+main.content {
+    margin-left: 240px; /* igual al width del sidebar + padding */
+    padding: 24px;
+    transition: margin-left 0.3s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px;
+        padding: 16px 8px;
+    }
+    .sidebar .logo {
+        font-size: 20px;
+    }
+    .sidebar nav a {
+        padding: 8px 6px;
+        font-size: 14px;
+    }
+    main.content {
+        margin-left: 60px;
+        padding: 16px;
+    }
+}

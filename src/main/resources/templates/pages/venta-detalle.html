@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Venta - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        .ticket {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .ticket-header {
+            text-align: center;
+            border-bottom: 2px dashed #ddd;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .ticket-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .ticket-info div {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .ticket-items {
+            margin-bottom: 24px;
+        }
+
+        .ticket-total {
+            border-top: 2px solid #333;
+            padding-top: 16px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        @media print {
+            .sidebar, .topbar, .no-print {
+                display: none !important;
+            }
+            .content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>🧾 Detalle de Venta</h1>
+        </header>
+
+
+        <div class="no-print" style="margin-bottom:16px;">
+            <a href="/ventas" class="button">← Volver a Ventas</a>
+            <button onclick="window.print()" class="button" style="background:#28a745; margin-left:8px;">🖨️ Imprimir</button>
+        </div>
+
+        <div class="ticket">
+            <div class="ticket-header">
+                <h2 style="margin:0 0 8px 0;">SystemPOS+</h2>
+                <p style="margin:0; color:#666; font-size:14px;">Sistema de Punto de Venta</p>
+                <p style="margin:8px 0 0 0; font-size:12px; color:#999;">www.systempos.com</p>
+            </div>
+
+            <div class="ticket-info">
+                <div>
+                    <strong>Venta #</strong><br>
+                    <span th:text="${venta.id}">001</span>
+                </div>
+                <div>
+                    <strong>Fecha y Hora</strong><br>
+                    <span th:text="${#temporals.format(venta.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:00</span>
+                </div>
+                <div>
+                    <strong>Método de Pago</strong><br>
+                    <span th:text="${venta.paymentMethod}">Efectivo</span>
+                </div>
+                <div>
+                    <strong>Comprobante</strong><br>
+                    <span th:text="${venta.comprobanteType}">Ticket</span>
+                </div>
+                <div th:if="${venta.usuario != null}">
+                    <strong>Vendedor</strong><br>
+                    <span th:text="${venta.usuario.nombre}">Usuario</span>
+                </div>
+                <div th:if="${venta.cliente != null}">
+                    <strong>Cliente</strong><br>
+                    <span th:text="${venta.cliente.nombre}">Cliente</span>
+                </div>
+            </div>
+
+            <div class="ticket-items">
+                <h3 style="margin:0 0 16px 0;">Productos</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cant.</th>
+                        <th>Precio</th>
+                        <th>Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${venta.detalles == null or venta.detalles.isEmpty()}">
+                        <td colspan="4" style="text-align:center; color:#999;">No hay productos en esta venta</td>
+                    </tr>
+                    <tr th:each="detalle : ${venta.detalles}">
+                        <td th:text="${detalle.producto.nombre}">Producto</td>
+                        <td th:text="${detalle.cantidad}">1</td>
+                        <td th:text="'$' + ${#numbers.formatDecimal(detalle.precio, 1, 2)}">$0.00</td>
+                        <td th:text="'$' + ${#numbers.formatDecimal(detalle.subtotal, 1, 2)}">$0.00</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align:right; margin-bottom:16px;">
+                <p style="margin:8px 0; font-size:15px;">
+                    <strong>Subtotal:</strong>
+                    <span th:text="'$' + ${#numbers.formatDecimal(venta.total - venta.tax, 1, 2)}">$0.00</span>
+                </p>
+                <p style="margin:8px 0; font-size:15px;">
+                    <strong>Impuesto (19%):</strong>
+                    <span th:text="'$' + ${#numbers.formatDecimal(venta.tax, 1, 2)}">$0.00</span>
+                </p>
+            </div>
+
+            <div class="ticket-total" style="text-align:right;">
+                <p style="margin:0;">
+                    TOTAL: <span th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 2)}" style="color:#28a745;">$0.00</span>
+                </p>
+            </div>
+
+            <div style="text-align:center; margin-top:32px; padding-top:16px; border-top:2px dashed #ddd;">
+                <p style="margin:0; font-size:13px; color:#666;">¡Gracias por su compra!</p>
+                <p style="margin:8px 0 0 0; font-size:11px; color:#999;">Este documento es un comprobante de venta</p>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

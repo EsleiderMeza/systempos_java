@@ -1,0 +1,157 @@
+<!-- Página clientes -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Clientes - SystemPOS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">SystemPOS+</h2>
+        <nav>
+            <a href="/dashboard">🏠 Dashboard</a>
+            <a href="/ventas">🛒 Ventas</a>
+            <a href="/productos">📦 Productos</a>
+            <a href="/inventario">📊 Inventario</a>
+            <a href="/clientes">👥 Clientes</a>
+            <a href="/proveedores">🚚 Proveedores</a>
+            <a href="/reportes">📈 Reportes</a>
+            <a href="/configuracion" sec:authorize="hasRole('ADMIN')">⚙️ Configuración</a>
+            <a href="/logout" class="logout">Salir</a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <h1>👥 Gestión de Clientes</h1>
+        </header>
+
+        <!-- Mensajes -->
+        <div th:if="${mensaje}" class="alert" style="background:#e6ffed">
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert" style="background:#ffebee; color:#c62828">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Formulario de Cliente -->
+        <div class="card">
+            <h3 th:text="${editando != null} ? 'Editar Cliente' : 'Nuevo Cliente'">Nuevo Cliente</h3>
+            <form method="post"
+                  th:action="${editando != null} ? @{/clientes/actualizar} : @{/clientes/guardar}"
+                  th:object="${cliente}">
+
+                <input type="hidden" th:field="*{id}" th:if="${editando != null}">
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+                    <div class="form-row">
+                        <label>Nombre Completo:</label>
+                        <input type="text" th:field="*{nombre}" placeholder="Ej: Juan Pérez" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Documento (DNI/CC):</label>
+                        <input type="text" th:field="*{documento}" placeholder="Ej: 12345678">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Teléfono:</label>
+                        <input type="text" th:field="*{telefono}" placeholder="Ej: 3001234567">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Email:</label>
+                        <input type="email" th:field="*{email}" placeholder="ejemplo@correo.com">
+                    </div>
+
+                    <div class="form-row" style="grid-column: 1 / -1;">
+                        <label>Dirección:</label>
+                        <input type="text" th:field="*{direccion}" placeholder="Ej: Calle 123 #45-67">
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button type="submit" class="button">
+                        <span th:text="${editando != null} ? 'Actualizar' : 'Guardar'">Guardar</span>
+                    </button>
+                    <a th:if="${editando != null}" href="/clientes" class="button"
+                       style="background:#6c757d; text-decoration:none;">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de Clientes -->
+        <div class="card">
+            <h3>Lista de Clientes</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Dirección</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${clientes == null or clientes.isEmpty()}">
+                    <td colspan="8" style="text-align:center">No hay clientes registrados</td>
+                </tr>
+                <tr th:each="c : ${clientes}">
+                    <td th:text="${c.id}"></td>
+                    <td th:text="${c.nombre}"></td>
+                    <td th:text="${c.documento}"></td>
+                    <td th:text="${c.telefono}"></td>
+                    <td th:text="${c.email}"></td>
+                    <td th:text="${c.direccion}" class="small"></td>
+                    <td th:text="${c.creadoEn != null ? #temporals.format(c.creadoEn, 'dd/MM/yyyy') : 'N/A'}"></td>
+                    <td>
+                        <a th:href="@{/clientes/editar/{id}(id=${c.id})}"
+                           class="button" style="font-size:12px; padding:6px 10px;">
+                            ✏️ Editar
+                        </a>
+                        <a th:href="@{/clientes/eliminar/{id}(id=${c.id})}"
+                           class="button"
+                           style="background:#dc3545; font-size:12px; padding:6px 10px;"
+                           onclick="return confirm('¿Está seguro de eliminar este cliente?')">
+                            🗑️ Eliminar
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Estadísticas -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-top:16px;">
+            <div class="card" style="text-align:center;">
+                <h4>Total Clientes</h4>
+                <h2 th:text="${clientes != null ? clientes.size() : 0}">0</h2>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Registrados Hoy</h4>
+                <h2>0</h2>
+                <p class="small">Próximamente</p>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Clientes Activos</h4>
+                <h2 th:text="${clientes != null ? clientes.size() : 0}" style="color:#28a745;">0</h2>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
