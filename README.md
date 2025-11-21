@@ -1,75 +1,122 @@
-# 🛒 SystemPOS - Java Spring Boot
+# SystemPOS – Sistema de Punto de Venta en Java + Spring Boot + MySQL (Docker)
 
-Sistema de punto de venta desarrollado en **Java Spring Boot** con arquitectura moderna y contenerización Docker.
+SystemPOS es un sistema de punto de venta desarrollado en **Java + Spring Boot**, utilizando **MySQL 8** como base de datos. El proyecto está completamente dockerizado para facilitar su despliegue y funcionamiento en cualquier entorno.
 
-## 🚀 Características
+---
 
-- ✅ **Spring Boot 3.2** - Framework moderno
-- ✅ **Spring Security** - Autenticación y autorización
-- ✅ **Spring Data JPA** - Persistencia con MySQL
-- ✅ **Thymeleaf** - Motor de plantillas
-- ✅ **Docker** - Contenerización completa
-- ✅ **Maven** - Gestión de dependencias
+## 🚀 Características principales
 
-## 🏗️ Arquitectura
-com.systempos/
-├── controller/ # Controladores MVC
-├── service/ # Lógica de negocio
-├── repository/ # Acceso a datos
-├── model/ # Entidades JPA
-├── config/ # Configuraciones
-└── api/ # Endpoints REST
+* Backend desarrollado en **Java 17** + **Spring Boot**
+* Base de datos **MySQL 8**
+* Contenedores usando **Docker Compose**
+* Persistencia de datos en volúmenes
+* API expuesta en `http://localhost:8081` (según configuración)
 
+---
 
-## 📋 Prerrequisitos
+## 📦 Requisitos previos
 
-- **Java 17**
-- **Maven 3.9+**
-- **MySQL 8.0+**
-- **Docker** (opcional)
+Antes de ejecutar el proyecto, es necesario tener instalado:
+
+* **Docker**
+* **Docker Compose**
+* **Git** (opcional, para clonar el repositorio)
+
+---
 
 ## 🐳 Ejecución con Docker
 
-```bash
-# Clonar repositorio
-git clone https://github.com/EsleiderMeza/systempos_java.git
-cd systempos_java
+1. Clona el repositorio:
 
-# Ejecutar con Docker Compose
-docker compose up -d
+```
+git clone https://github.com/TU_USUARIO/TU_REPO.git
+cd systempos
+```
 
-# La aplicación estará en: http://localhost:8081
+2. Construye e inicia los contenedores:
 
+```
+docker compose -f docker-compose.java.yml up -d --build
+```
 
-# Compilar
-mvn clean compile
+3. Verifica que los servicios estén levantados:
 
-# Ejecutar tests
-mvn test
+```
+docker compose -f docker-compose.java.yml ps
+```
 
-# Ejecutar aplicación
-mvn spring-boot:run
+4. Para ver logs de la aplicación Java:
 
-# Empaquetar
-mvn clean package
+```
+docker compose -f docker-compose.java.yml logs -f java-app
+```
 
+---
 
+## 🔧 Configuración de Base de Datos
 
-spring.datasource.url=jdbc:mysql://localhost:3306/systempos_db
+Tu aplicación Spring Boot se conecta usando:
+
+```
+jdbc:mysql://mysql:3306/systempos
+```
+
+Configura `application.properties` así:
+
+```
+spring.datasource.url=jdbc:mysql://mysql:3306/systempos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 spring.datasource.username=root
-spring.datasource.password=password
-server.port=8081
+spring.datasource.password=123456
+```
 
-package
-🌐 Acceso
-Aplicación: http://localhost:8081
+> Nota: el nombre del host (`mysql`) debe ser el nombre del servicio definido en Docker Compose.
 
-Base de datos: MySQL en localhost:3306
+---
 
-Usuario por defecto: admin
+## 🛠 Construcción manual del backend
 
-Contraseña: admin123
+Si deseas ejecutar la aplicación fuera de Docker:
 
+```
+./mvnw clean package
+java -jar target/systempos.jar
+```
 
+---
 
+## 🗂 Estructura del proyecto
 
+```
+systempos/
+│
+├── src/main/java/...        Código fuente
+├── src/main/resources       Configuración
+├── docker-compose.java.yml  Servicios en Docker
+├── Dockerfile               Imagen del backend
+└── README.md                Este archivo
+```
+
+---
+
+## 🧪 Pruebas
+
+Puedes probar si el backend está funcionando con:
+
+```
+curl http://localhost:8081
+```
+
+---
+
+## 📄 Licencia
+
+Este proyecto es de uso personal/educativo. Ajusta la licencia según tus necesidades.
+
+---
+
+## 👤 Autor
+
+Desarrollado por **Esleider Jesús Meza** (*Slade Hermesa*).
+
+```
+```
