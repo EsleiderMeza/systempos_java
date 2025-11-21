@@ -1,16 +1,25 @@
+# ============================
+#   STAGE 1 — Build con Maven
+# ============================
+FROM maven:3.9-eclipse-temurin-17 AS build
+
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+
+# Crear jar sin tests
+RUN mvn -B -DskipTests clean package
+
+
+# ============================
+#   STAGE 2 — Imagen final
+# ============================
 FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-# Crear aplicación Java
-RUN echo 'public class App { public static void main(String[] args) { System.out.println("🎉 ¡SYSTEMPOS EN DOCKER FUNCIONANDO!"); } }' > App.java
-
-# Compilar y crear JAR en UN SOLO LAYER
-RUN javac App.java && \
-    echo "Main-Class: App" > manifest.txt && \
-    jar cfm app.jar manifest.txt App.class && \
-    ls -la && \
-    java -jar app.jar
+# Copiar el jar desde el build
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
